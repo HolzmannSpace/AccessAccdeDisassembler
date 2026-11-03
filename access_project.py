@@ -146,11 +146,11 @@ class VBAModuleInfo:
     function_names: list[str]
 
 
-def try_decode_ascii(byte_string: bytes):
+def try_decode_identifier(byte_string: bytes):
     if not byte_string:
         return ""
     try:
-        return byte_string.decode("ascii")
+        return byte_string.decode(config.PROJECT_ENCODING)
     except Exception:
         return ""
 
@@ -170,8 +170,8 @@ class VBAProject:
         self._module_index_to_module_info: dict[int, VBAModuleInfo] = {}
 
         for i, module in enumerate(self._project_resource.modules):
-            module_name = self._resolve_fixup(module.name, inner_value=True).decode("ascii")
-            function_names = [try_decode_ascii(self._resolve_fixup(function_name_fixup, inner_value=True)) for
+            module_name = self._resolve_fixup(module.name, inner_value=True).decode(config.PROJECT_ENCODING)
+            function_names = [try_decode_identifier(self._resolve_fixup(function_name_fixup, inner_value=True)) for
                               function_name_fixup
                               in
                               module.functions]
@@ -240,7 +240,7 @@ class VBAProject:
 
         self._module_name_to_inner_name = {entry.module_name.data: entry.inner_name.data for entry in
                                            vba_project_module_entries}
-        self._name_manger_strings = [try_decode_ascii(i.unk12) for i in
+        self._name_manger_strings = [try_decode_identifier(i.unk12) for i in
                                      vba_project.stlib.gtloe.unk17.unk5]
 
         self._name_manger_string_base = self._get_symbol_table_base_index()

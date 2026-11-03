@@ -102,7 +102,8 @@ def add_custom_opcodes(original_opcodes: typing.List[parse_opcode_handlers.Opcod
             name=name,
             handler_address=opcode_mapping[name].handler_address,
             args=[OpcodeArg(offset=0, size=2),
-                  VariableSizeOpcodeArg(offset=2, index_of_size=0, op_on_size=lambda x: (4, x / 2)),
+                  VariableSizeOpcodeArg(offset=2, index_of_size=0,
+                                        op_on_size=lambda x: (2 if config.IS_32_BIT_VBA6 else 4, x // 2)),
                   OpcodeArg(offset=100, size=0)],
             init=True,
             # Further analysis may be needed to confirm additional arguments

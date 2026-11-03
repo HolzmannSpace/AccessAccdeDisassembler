@@ -96,6 +96,10 @@ git clone https://github.com/BenKuperstein/AccessAccdeDisassembler
 pip install -r requirements.txt
 ```
 
+The optional `angr` dependency in `requirements-dev.txt` is needed only when
+generating new opcode mappings. Disassembling with the bundled mappings does
+not require it.
+
 ### Running
 
 ```cmd
@@ -105,6 +109,19 @@ python disassemble.py --accde-file-path "path/to/your/file.accde" --output-folde
 - `--accde-file-path` (required): Path to the ACCDE file you want to disassemble.
 - `--output-folder-path` (required): Path to the folder where the disassembled code will be saved.
 - `--vba6` (optional): Include this flag if the ACCDE file uses 32-bit VBA6.
+- `--encoding` (optional): Windows code page used for project identifiers,
+  defaulting to `cp1252`. For projects from other locales, pass the matching
+  Python codec name, for example `--encoding cp1251`. Listings are saved as UTF-8.
+
+### Tests
+
+With the regular dependencies installed, run the synthetic regression tests:
+
+```cmd
+python -m unittest discover -s tests -v
+```
+
+The tests do not require an ACCDE sample, Access runtime, or `angr`.
 
 ## Known Issues
 - The project is in an early state, there are probably lots of bugs, if your file fails to be opened by the project,
