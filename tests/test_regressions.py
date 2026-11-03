@@ -1,4 +1,5 @@
 import io
+import argparse
 import pathlib
 import struct
 import subprocess
@@ -60,6 +61,26 @@ class IdentifierEncodingTests(unittest.TestCase):
 
     def test_codec_alias_is_normalized(self):
         self.assertEqual(disassemble.project_encoding('windows-1252'), 'cp1252')
+        for encoding in ('utf-8', 'utf-16', 'utf-32', 'cp1251'):
+            with self.subTest(encoding=encoding):
+                self.assertEqual(disassemble.project_encoding(encoding), encoding)
+
+    def test_non_text_codecs_are_rejected(self):
+        for encoding in ('base64', 'base64_codec', 'hex', 'rot_13', 'zlib_codec'):
+            with self.subTest(encoding=encoding):
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    disassemble.project_encoding(encoding)
+
+    def test_cli_rejects_non_text_codecs_before_opening_a_database(self):
+        for encoding in ('base64', 'hex', 'rot_13'):
+            with self.subTest(encoding=encoding):
+                result = subprocess.run([
+                    sys.executable, str(ROOT / 'disassemble.py'),
+                    '--accde-file-path', 'unused.accde', '--output-folder-path', 'unused-output',
+                    '--encoding', encoding,
+                ], cwd=ROOT, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 2)
+                self.assertIn('Project encoding must decode bytes to text', result.stderr)
 
     def test_listings_are_written_as_utf8(self):
         module_name = 'Mod_\u041f\u0440\u0438\u043c\u0435\u0440'

@@ -12,9 +12,20 @@ VBA7_OPCODE_FILE = pathlib.Path(__file__).parent.joinpath("generated/opcodes_vba
 
 def project_encoding(value: str) -> str:
     try:
-        return codecs.lookup(value).name
+        encoding = codecs.lookup(value).name
     except LookupError:
-        raise argparse.ArgumentTypeError(f"Unknown project encoding: {value}")
+        raise argparse.ArgumentTypeError(f"Unknown project encoding: {value}") from None
+    try:
+        # lookup() also accepts binary transforms and str-to-str codecs.
+        # Match the bytes.decode() operation used by the project reader.
+        # Empty input short-circuits codec validation in CPython.
+        bytes(4).decode(encoding)
+    except (LookupError, TypeError):
+        raise argparse.ArgumentTypeError(f"Project encoding must decode bytes to text: {value}") from None
+    except UnicodeError:
+        # A text codec can reject the probe's content (e.g. a required BOM).
+        pass
+    return encoding
 
 
 def disassemble_all(file_path: pathlib.Path, output_folder_path: pathlib.Path):
