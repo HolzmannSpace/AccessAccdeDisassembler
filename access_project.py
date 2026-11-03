@@ -123,6 +123,7 @@ class LocalFunctionImport64Bit:
 @dataclasses.dataclass
 class LocalFunctionImport32Bit:
     function_index: int
+    srp_index: int
 
 
 @dataclasses.dataclass
@@ -136,7 +137,7 @@ class BasicValueImport:
     value: any
 
 
-ImportTypes = NativeFunctionImport | LocalFunctionImport64Bit | BasicValueImport
+ImportTypes = NativeFunctionImport | LocalFunctionImport64Bit | LocalFunctionImport32Bit | BasicValueImport
 
 
 @dataclasses.dataclass
@@ -260,11 +261,9 @@ class VBAProject:
 
     def _fully_resolve_import(self, function_import: ImportTypes):
         match function_import:
-            case LocalFunctionImport64Bit():
+            case LocalFunctionImport64Bit() | LocalFunctionImport32Bit():
                 _, module_index = self._get_srp_type_and_module_index(function_import.srp_index)
                 return self._module_index_to_module_info[module_index].function_names[function_import.function_index]
-            case LocalFunctionImport32Bit():
-                return self._all_functions[function_import.function_index]
             case NativeFunctionImport():
                 match function_import.function_name_or_ordinal:
                     case int():
@@ -305,7 +304,7 @@ class VBAProject:
                     else function_ordinal)
             case 18:
                 if config.IS_32_BIT_VBA6:
-                    return LocalFunctionImport32Bit(import_resource.resource.resource.unk1)
+                    return LocalFunctionImport32Bit(import_resource.resource.resource.unk1, import_fixup.srp_index)
                 return LocalFunctionImport64Bit(
                     srp_index=import_resource.resource.resource.pointer.srp_index,
                     function_index=import_resource.resource.resource.unk1)
