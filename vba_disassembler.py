@@ -10,6 +10,25 @@ from scripts.parse_opcode_handlers import *
 
 VBA6_MAX_MNEMONIC = 250
 
+# These handlers take a frame offset first, even though the role is not
+# apparent from a common prefix. Keep branch targets and member/import
+# indexes out of this set rather than treating every "Var" name as a frame.
+FRAME_OFFSET_FIRST_OPCODES = {
+    'ImpVar', 'EqvVar', 'XorVar', 'OrVar', 'AndVar',
+    'EqVar', 'EqTextVar', 'NeVar', 'NeTextVar', 'LeVar', 'LeTextVar',
+    'GeVar', 'GeTextVar', 'LtVar', 'LtTextVar', 'GtVar', 'GtTextVar',
+    'LikeVar', 'LikeTextVar', 'AddVar', 'SubVar', 'ModVar', 'IDvVar',
+    'MulVar', 'DivVar', 'NotVar', 'UMiVar', 'PwrVar', 'ConcatVar',
+    'FnAbsVar', 'FnFixVar', 'FnIntVar', 'FnLenVar', 'FnLenBVar',
+    'FnInStrB4Var', 'FnInStr4Var', 'FnStrComp3Var',
+    'CVecVar', 'CStrVarVal', 'Ary1LdRfVarg', 'PopTmpLdAdVar',
+    'LateMemLdVar', 'LateIdLdVar', 'LateMemCallLdVar', 'LateIdCallLdVar',
+    'ForVar', 'ForStepVar', 'ForEachCollVar', 'NextEachCollVar',
+    'ForEachAryVar', 'NextEachAryVar', 'ForEachVar', 'ForEachVarFree', 'NextEachVar',
+    'FDupVar', 'VarIndexLdVar', 'VarIndexLdRfVar', 'VarIndexLdRfVarLock', 'IStVarCopyObj',
+    'VarLateMemLdRfVar', 'VarLateMemCallLdRfVar', 'VarLateMemLdVar', 'VarLateMemCallLdVar',
+}
+
 
 def add_custom_opcodes(original_opcodes: typing.List[parse_opcode_handlers.Opcode]):
     opcode_mapping = {opcode.name: opcode for opcode in original_opcodes}
@@ -150,7 +169,8 @@ def add_custom_opcodes(original_opcodes: typing.List[parse_opcode_handlers.Opcod
             opcode.args[1].type = OpcodeArgType.IMPORT_INDEX
         if "LitStr" in opcode_name:
             opcode.args[0].type = OpcodeArgType.IMPORT_INDEX
-        if opcode_name.startswith(('FLd', 'FSt', 'CVarRef', 'LitVar')):
+        if (opcode_name.startswith(('FLd', 'FSt', 'FMem', 'CVar', 'LitVar', 'FFree1')) or
+                opcode_name in FRAME_OFFSET_FIRST_OPCODES):
             if len(opcode.args) > 0:
                 opcode.args[0].type = OpcodeArgType.VAR_ADDRESS
         if opcode_name in ('FFreeVar', 'FFreeStr', 'FFreeAd'):

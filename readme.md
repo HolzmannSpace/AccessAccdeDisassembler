@@ -130,6 +130,7 @@ dependencies, all five 256-entry secondary tables in the 32-bit opcode reader,
 module-scoped local function imports, and operand boundaries for cleanup,
 loop, member-store and return/exit instructions. Listing tests distinguish
 numeric operands from frame offsets and imports, retain every cleanup offset,
+preserve variable names for single-value cleanup and variant destinations,
 and leave out-of-range import indexes numeric. The applicable 64-bit paths are
 covered as well.
 

@@ -146,6 +146,33 @@ class LocalImportTests(unittest.TestCase):
 
 
 class OperandRenderingTests(unittest.TestCase):
+    def assert_first_frame_operand_resolves(self, names):
+        for mode in (True, False):
+            with patch.object(config, 'IS_32_BIT_VBA6', mode):
+                decoder = decoder_for(mode)
+                for name in names:
+                    with self.subTest(vba6=mode, instruction=name):
+                        opcode = next(op for op in decoder._opcodes if op.name == name)
+                        values = [-8] + [20] * (len(opcode.args) - 1)
+                        raw = encode_instruction(decoder, name, values, mode)
+                        text = listing(decoder, raw, {-8: 'NamedFrameValue', 20: 'NotAnAddress'})
+                        self.assertIn(name + '(NamedFrameValue', text)
+
+    def test_single_value_cleanup_offsets_keep_variable_names(self):
+        self.assert_first_frame_operand_resolves(('FFree1Var', 'FFree1Str', 'FFree1Ad'))
+
+    def test_variant_conversion_destinations_keep_variable_names(self):
+        self.assert_first_frame_operand_resolves((
+            'CVarI2', 'CVarStr', 'CVarCy', 'CVarI4', 'CVarR4', 'CVarR8',
+            'CVarAd', 'CVarUI1', 'CVarUnk', 'CVarDate', 'CVarVec', 'CVarUdt',
+        ))
+
+    def test_other_known_frame_operand_families_keep_variable_names(self):
+        self.assert_first_frame_operand_resolves((
+            'AddVar', 'EqTextVar', 'ConcatVar', 'FnInStr4Var', 'ForVar',
+            'ForEachCollVar', 'FDupVar', 'LateMemLdVar', 'FMemStStr',
+        ))
+
     def test_numeric_operands_do_not_resolve_to_coincidentally_matching_symbols(self):
         for mode in (True, False):
             with self.subTest(vba6=mode), patch.object(config, 'IS_32_BIT_VBA6', mode):
